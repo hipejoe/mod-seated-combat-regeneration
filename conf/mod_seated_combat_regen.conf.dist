@@ -1,0 +1,22 @@
+#
+# Copyright (C) 2016+ AzerothCore <www.azerothcore.org>, released under GNU AGPL v3 license: https://github.com/azerothcore/azerothcore-wotlk/blob/master/LICENSE-AGPL3
+#
+
+[worldserver]
+
+########################################
+# Seated combat regeneration configuration
+########################################
+#
+#    SeatedCombatRegen.Enable
+#        Description: Enable the seated combat regeneration mod
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+#    SeatedCombatRegen.TimerSeconds
+#        Description: Sets the seated combat regeneration timer in seconds that the player must remain seated in order to exit combat state
+#        Default:     30 - Seconds
+#
+
+SeatedCombatRegen.Enable = 1
+SeatedCombatRegen.TimerSeconds = 30
