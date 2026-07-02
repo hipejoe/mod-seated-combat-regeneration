@@ -138,7 +138,7 @@ public:
     }
 };
 
-void AddSC_mod_seated_combat_regen()
+void AddSC_mod_seated_combat_regeneration()
 {
     new SeatedCombatRegenPlayerScript();
 }
