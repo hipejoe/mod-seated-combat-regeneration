@@ -3,12 +3,12 @@
  */
 
 // From SC
-void AddSC_mod_seated_combat_regen();
+void AddSC_mod_seated_combat_regeneration();
 
 // Add all
 // cf. the naming convention https://github.com/azerothcore/azerothcore-wotlk/blob/master/doc/changelog/master.md#how-to-upgrade-4
 // additionally replace all '-' in the module folder name with '_' here
-void Addmod_seated_combat_regenScripts()
+void Addmod_seated_combat_regenerationScripts()
 {
-    AddSC_mod_seated_combat_regen();
+    AddSC_mod_seated_combat_regeneration();
 }
