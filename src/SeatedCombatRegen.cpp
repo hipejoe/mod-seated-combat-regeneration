@@ -53,6 +53,24 @@ namespace
         SeatedCombatRegenStates;
 }
 
+class SeatedCombatRegenWorldScript : public WorldScript
+{
+public:
+    SeatedCombatRegenWorldScript()
+        : WorldScript(
+            "SeatedCombatRegenWorldScript",
+            {
+                WORLDHOOK_ON_BEFORE_CONFIG_LOAD
+            })
+    {
+    }
+
+    void OnBeforeConfigLoad(bool reload) override
+    {
+        SeatedCombatRegenConfigCache.Initialize(reload);
+    }
+};
+
 class SeatedCombatRegenPlayerScript : public PlayerScript
 {
 public:
@@ -140,5 +158,6 @@ public:
 
 void AddSC_mod_seated_combat_regeneration()
 {
+    new SeatedCombatRegenWorldScript();
     new SeatedCombatRegenPlayerScript();
 }
