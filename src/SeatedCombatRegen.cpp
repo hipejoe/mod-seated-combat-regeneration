@@ -92,24 +92,24 @@ public:
             return;
         }
 
+        ObjectGuid playerGuid = player->GetGUID();
+
         if (!SeatedCombatRegenConfigCache.GetConfigValue<bool>(
             SeatedCombatRegenConfig::Enabled))
         {
-            SeatedCombatRegenStates.erase(player->GetGUID());
+            SeatedCombatRegenStates.erase(playerGuid);
             return;
         }
 
         if (!player->IsAlive())
         {
-            SeatedCombatRegenStates.erase(player->GetGUID());
+            SeatedCombatRegenStates.erase(playerGuid);
             return;
         }
 
-        auto& state = SeatedCombatRegenStates[player->GetGUID()];
-
         if (!player->IsInCombat() || !player->IsSitState())
         {
-            state.SeatedTimer = 0;
+            SeatedCombatRegenStates.erase(playerGuid);
             return;
         }
 
@@ -120,6 +120,8 @@ public:
 
         uint32 seatedCombatRegenDelay =
             timerSeconds * IN_MILLISECONDS;
+
+        auto& state = SeatedCombatRegenStates[playerGuid];
 
         state.SeatedTimer = std::min<uint32>(
             state.SeatedTimer + diff,
@@ -132,20 +134,21 @@ public:
 
         player->CombatStop();
 
-        SeatedCombatRegenStates.erase(player->GetGUID());
+        SeatedCombatRegenStates.erase(playerGuid);
     }
 
     void OnPlayerLeaveCombat(Player* player) override
     {
-        if (!player)
-        {
-            return;
-        }
-
-        SeatedCombatRegenStates.erase(player->GetGUID());
+        this->RemovePlayerState(player);
     }
 
     void OnPlayerLogout(Player* player) override
+    {
+        this->RemovePlayerState(player);
+    }
+
+private:
+    void RemovePlayerState(Player* player)
     {
         if (!player)
         {
