@@ -20,3 +20,37 @@
 
 SeatedCombatRegen.Enable = 1
 SeatedCombatRegen.TimerSeconds = 30
+
+
+########################################
+# Mounting allowed configuration
+########################################
+#
+#    SeatedCombatRegen.MountOverride.Enable
+#        Description: Enables allowing mount spell casts in configured areas
+#                     where AzerothCore would normally reject mounting.
+#        Default:     1
+#
+
+SeatedCombatRegen.MountOverride.Enable = 1
+
+#
+#    SeatedCombatRegen.MountOverride.AreaIds
+#        Description: Comma-separated area or zone IDs where mount casts should
+#                     be allowed even if the core normally rejects mounting.
+#                     The check compares against both Player::GetAreaId()
+#                     and Player::GetZoneId().
+#        Example:     876,877,12
+#        Default:
+#
+
+SeatedCombatRegen.MountOverride.AreaIds = 
+
+#
+#    SeatedCombatRegen.MountOverride.Message
+#        Description: Optional message sent to the player when the module allows
+#                     mounting in an overridden area.
+#        Default:     Mounting is allowed in this area.
+#
+
+SeatedCombatRegen.MountOverride.Message = 
