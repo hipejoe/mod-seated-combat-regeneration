@@ -9,12 +9,19 @@
 #include <algorithm>
 #include <unordered_map>
 
+#include "Chat.h"
+#include "Spell.h"
+
 namespace
 {
     enum class SeatedCombatRegenConfig
     {
         Enabled,
         TimerSeconds,
+
+        MountOverrideEnabled,
+        MountOverrideAreaIds,
+        MountOverrideMessage,
 
         Max
     };
@@ -39,6 +46,21 @@ namespace
                 SeatedCombatRegenConfig::TimerSeconds,
                 "SeatedCombatRegen.TimerSeconds",
                 30);
+
+            SetConfigValue<bool>(
+                SeatedCombatRegenConfig::MountOverrideEnabled,
+                "SeatedCombatRegen.MountOverride.Enable",
+                true);
+
+            SetConfigValue<std::string>(
+                SeatedCombatRegenConfig::MountOverrideAreaIds,
+                "SeatedCombatRegen.MountOverride.AreaIds",
+                "");
+
+            SetConfigValue<std::string>(
+                SeatedCombatRegenConfig::MountOverrideMessage,
+                "SeatedCombatRegen.MountOverride.Message",
+                "Mounting is allowed in this area.");
         }
     };
 
@@ -51,6 +73,87 @@ namespace
 
     std::unordered_map<ObjectGuid, SeatedCombatRegenState>
         SeatedCombatRegenStates;
+
+    std::unordered_set<uint32> ParseAreaIds(std::string const& rawAreaIds)
+    {
+        std::unordered_set<uint32> areaIds;
+
+        std::stringstream stream(rawAreaIds);
+        std::string token;
+
+        while (std::getline(stream, token, ','))
+        {
+            token.erase(
+                std::remove_if(
+                    token.begin(),
+                    token.end(),
+                    [](unsigned char character)
+                    {
+                        return std::isspace(character);
+                    }),
+                token.end());
+
+            if (token.empty())
+            {
+                continue;
+            }
+
+            try
+            {
+                areaIds.insert(static_cast<uint32>(std::stoul(token)));
+            }
+            catch (...)
+            {
+            }
+        }
+
+        return areaIds;
+    }
+
+    bool IsMountOverrideArea(Player* player)
+    {
+        if (!player)
+        {
+            return false;
+        }
+
+        std::string rawAreaIds =
+            SeatedCombatRegenConfigCache.GetConfigValue<std::string>(
+                SeatedCombatRegenConfig::MountOverrideAreaIds);
+
+        std::unordered_set<uint32> areaIds = ParseAreaIds(rawAreaIds);
+
+        if (areaIds.empty())
+        {
+            return false;
+        }
+
+        return areaIds.find(player->GetAreaId()) != areaIds.end() ||
+            areaIds.find(player->GetZoneId()) != areaIds.end();
+    }
+
+    bool IsMountSpell(SpellInfo const* spellInfo)
+    {
+        if (!spellInfo)
+        {
+            return false;
+        }
+
+        return IsMountSpell(spellInfo) ();
+    }
+
+    bool IsMountLocationFailure(SpellCastResult result)
+    {
+        switch (result)
+        {
+        case SPELL_FAILED_NOT_HERE:
+        case SPELL_FAILED_ONLY_OUTDOORS:
+        case SPELL_FAILED_NO_MOUNTS_ALLOWED:
+            return true;
+        default:
+            return false;
+        }
+    }
 }
 
 class SeatedCombatRegenWorldScript : public WorldScript
@@ -159,8 +262,79 @@ private:
     }
 };
 
+class SeatedCombatRegenMountOverrideSpellScript : public AllSpellScript
+{
+public:
+    SeatedCombatRegenMountOverrideSpellScript()
+        : AllSpellScript(
+            "SeatedCombatRegenMountOverrideSpellScript",
+            {
+                ALLSPELLHOOK_ON_SPELL_CHECK_CAST
+            })
+    {
+    }
+
+    void OnSpellCheckCast(
+        Spell* spell,
+        bool /*strict*/,
+        SpellCastResult& result) override
+    {
+        if (!SeatedCombatRegenConfigCache.GetConfigValue<bool>(
+            SeatedCombatRegenConfig::MountOverrideEnabled))
+        {
+            return;
+        }
+
+        if (!IsMountLocationFailure(result))
+        {
+            return;
+        }
+
+        if (!spell)
+        {
+            return;
+        }
+
+        Unit* caster = spell->GetCaster();
+
+        if (!caster)
+        {
+            return;
+        }
+
+        Player* player = caster->ToPlayer();
+
+        if (!player)
+        {
+            return;
+        }
+
+        if (!IsMountSpell(spell->GetSpellInfo()))
+        {
+            return;
+        }
+
+        if (!IsMountOverrideArea(player))
+        {
+            return;
+        }
+
+        result = SPELL_CAST_OK;
+
+        std::string message =
+            SeatedCombatRegenConfigCache.GetConfigValue<std::string>(
+                SeatedCombatRegenConfig::MountOverrideMessage);
+
+        if (!message.empty())
+        {
+            ChatHandler(player->GetSession()).SendSysMessage(message);
+        }
+    }
+};
+
 void AddSC_mod_seated_combat_regeneration()
 {
     new SeatedCombatRegenWorldScript();
     new SeatedCombatRegenPlayerScript();
+    new SeatedCombatRegenMountOverrideSpellScript();
 }
