@@ -139,7 +139,7 @@ namespace
             return false;
         }
 
-        return IsMountSpell(spellInfo) ();
+        return IsMountSpell(spellInfo);
     }
 
     bool IsMountLocationFailure(SpellCastResult result)
