@@ -295,7 +295,7 @@ public:
             return;
         }
 
-        Unit* caster = spell->GetCaster();
+        Unit* caster = spell->GetOriginalCaster();
 
         if (!caster)
         {
